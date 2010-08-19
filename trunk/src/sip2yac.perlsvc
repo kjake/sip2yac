@@ -1,0 +1,82 @@
+#!C:\Program Files (x86)\ActiveState Perl Dev Kit 9.0.1\bin\perlsvc-gui.exe
+PAP-Version: 1.0
+Packer: C:\Program Files (x86)\ActiveState Perl Dev Kit 9.0.1\bin\perlsvc.exe
+Script: sip2yac.pl
+Cwd: S:\Users\Kevin\My Documents\EclipseWorkspace\sip2yac\trunk\src
+Clean: 1
+Date: 2010-08-18 21:37:08
+Debug: 
+Dependent: 0
+Dyndll: 0
+Exe: ..\build\sip2yac.exe
+Force: 1
+Hostname: SPOON
+Icon: sip2yac.ico
+Manifest: 
+No-Compress: 0
+No-Logo: 1
+Runlib: 
+Shared: none
+Tmpdir: 
+Trim: Time::Zone
+Trim: DBD::Oracle
+Trim: DBD::ODBC
+Trim: DBD::SQLite
+Trim: DBD::Gofer
+Trim: DBD::ExampleP
+Trim: DBD::Sponge
+Trim: DBD::NullP
+Trim: utf8
+Trim: URI::file::
+Trim: URI::ftp
+Trim: URI::gopher
+Trim: URI::https
+Trim: URI::ldap
+Trim: URI::ldapi
+Trim: URI::ldaps
+Trim: URI::mailto
+Trim: URI::nntp
+Trim: URI::pop
+Trim: URI::rlogin
+Trim: URI::news
+Trim: URI::mms
+Trim: URI::sip
+Trim: URI::rtspu
+Trim: URI::rsync
+Trim: URI::urn::
+Trim: URI::rtsp
+Trim: URI::tn3270
+Trim: URI::telnet
+Trim: URI::ssh
+Trim: URI::sips
+Trim: URI::snews
+Trim: Net::FTP::
+Trim: LWP::Protocol::nntp
+Trim: LWP::Protocol::mailto
+Trim: LWP::Protocol::loopback
+Trim: LWP::Protocol::gopher
+Trim: LWP::Protocol::ftp
+Trim: LWP::Protocol::file
+Trim: LWP::Protocol::cpan
+Trim: LWP::Authen::
+Trim: LWP::Protocol::https10
+Trim: LWP::Protocol::https
+Trim: Win32API::File
+Trim: Storable::
+Trim: Encode::
+Trim: IO::Compress::
+Trim: IO::Uncompress::
+Trim: Compress::
+Verbose: 0
+Version-Comments: Kevin Jacobson (kevin.jacobson@gmail.com)
+Version-CompanyName: 
+Version-FileDescription: Sends incoming SIP callerID info to YAC listeners
+Version-FileVersion: 1.12
+Version-InternalName: sip2yac.pl
+Version-LegalCopyright: GPL v3
+Version-LegalTrademarks: 
+Version-OriginalFilename: sip2yac.exe
+Version-ProductName: sip2yac
+Version-ProductVersion: 1.12
+Warnings: 1
+Xclude: 0

@@ -1,0 +1,28 @@
+Requirements:
+* Written for Windows XP, but may work on Vista+
+* WinPcap needs to be installed to be able to analyze the network for incoming SIP calls
+* Ability to configure your network in a way that your host PC can see all traffic to/from your SIP device
+** Example 1: Two network cards in the host PC bridged, one connected to the main LAN, the other to the SIP device
+** Example 2: Software SIP phone running on host PC
+** Example 3: Host PC and SIP device are connected to a Hub
+** Example 4: Managed network switch is used where you can enable a 'monitor' on the SIP device port
+
+Resources:
+* WinPcap can be found here: http://www.winpcap.org/install/
+* Source Unix script: http://www.thearmstrongs.org/mythtv/vonageSniff.pl
+
+Usage:
+* Run "vonageSniff -h" on a command line to see configuration options
+* See included configuration file for help with use of a configuration file
+
+Configuration file possible settings:
+dev=
+filter=''
+promisc=
+updatecsv=
+y=
+timeout=
+quiet=
+debug=
+ignore=
+useEvtlog=

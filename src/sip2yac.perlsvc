@@ -4,7 +4,7 @@ Packer: C:\Program Files (x86)\ActiveState Perl Dev Kit 9.0.1\bin\perlsvc.exe
 Script: sip2yac.pl
 Cwd: S:\Users\Kevin\My Documents\EclipseWorkspace\sip2yac\trunk\src
 Clean: 1
-Date: 2010-08-18 21:37:08
+Date: 2010-08-19 22:59:43
 Debug: 
 Dependent: 0
 Dyndll: 0
@@ -67,16 +67,18 @@ Trim: Encode::
 Trim: IO::Compress::
 Trim: IO::Uncompress::
 Trim: Compress::
+Trim: HTTP::Cookies
+Trim: LWP::ConnCache
 Verbose: 0
 Version-Comments: Kevin Jacobson (kevin.jacobson@gmail.com)
 Version-CompanyName: 
 Version-FileDescription: Sends incoming SIP callerID info to YAC listeners
-Version-FileVersion: 1.12
+Version-FileVersion: 1.13
 Version-InternalName: sip2yac.pl
 Version-LegalCopyright: GPL v3
 Version-LegalTrademarks: 
 Version-OriginalFilename: sip2yac.exe
 Version-ProductName: sip2yac
-Version-ProductVersion: 1.12
+Version-ProductVersion: 1.13
 Warnings: 1
 Xclude: 0

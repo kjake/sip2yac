@@ -36,3 +36,6 @@
 #      Format: 2125556789,Capt. Crunch
 # 1.12 Add additional reverse lookup sources
 #      Rename project to sip2yac
+# 1.13 Added more comments to source
+#      Added logic to prevent duplicate entries from being added to the CSV file
+#      Added feature to log outgoing calls to CSV

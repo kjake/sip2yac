@@ -26,3 +26,4 @@ quiet=
 debug=
 ignore=
 useEvtlog=
+logoutgoing=

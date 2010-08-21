@@ -40,14 +40,19 @@
 # 1.13 Added more comments to source
 #      Added logic to prevent duplicate entries from being added to the CSV file
 #      Added feature to log outgoing calls to CSV
+# 1.14 Added incoming to the logging to CSV feature intoduced in 1.13 - NOTE options rewording
+#      Whitepages.com now requires an API key. Due to rate limiting, it makes more sense to require individuals to provide an API key rather than embed mine
+#      Sign-up here: http://developer.whitepages.com
+#      Updated README
 
-
+use strict;
+use warnings;
 use IO::Socket;
 use IO::Socket::INET;
 use Net::Pcap;
 use NetPacket::Ethernet qw(:strip);
 use NetPacket::IP qw(:strip);
-use NetPacket::TCP;
+#use NetPacket::TCP;
 use NetPacket::UDP;
 #use Unicode::String qw(utf8 latin1 utf16);
 use Sys::Syslog;
@@ -73,14 +78,16 @@ my $user="root";
 my $promisc=1;
 my $to_ms=1000;
 my $useEvtlog=0;
-my $log2csv=0;
+my $logo2csv=0;
+my $logi2csv=0;
 my $update_csv=0;
 my $ignore="";
+my $whitepages_api="";
 my $ident="sip2yac";
 my $facility="local1";
 my $options="pid,perror";
 my $priority="info";
-my $useragent="Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.6 (KHTML, like Gecko) Chrome/6.0.491.0 Safari/534.6";
+my $useragent="Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.6 (KHTML, like Gecko) Chrome/7.0.501.0 Safari/534.6";
 my $version = GetFileVersionInfo ( PerlSvc::exe() )->{FileVersion};
 my $dbh = DBI->connect ("dbi:CSV:", undef, undef, {
         f_schema         => undef,
@@ -101,7 +108,7 @@ $dbh->{csv_tables}{CallLog} = {
         sep_char    => ",",
         quote_char  => undef,
         escape_char => undef,
-        col_names => [qw( date phonenum phonename )],
+        col_names => [qw( date phonenum phonename type )],
         };
 $PerlSvc::Config{ServiceName} = "sip2yac";
 $PerlSvc::Config{DisplayName} = "sip2yac";
@@ -206,7 +213,7 @@ sub launch_proc() {
 									PerlSvc::exe(),
 									PerlSvc::exe() . " " . $PerlSvc::Config{Parameters},
 									0,
-									NORMAL_PRIORITY_CLASS,
+									'NORMAL_PRIORITY_CLASS',
 									".")|| die ErrorReport();
 		$pid = $child->GetProcessID();
 		log_msg("Started child process, PID: $pid");
@@ -249,8 +256,8 @@ sub start_AS {
   if (! -e "./sip2yac.csv") {
     $dbh->do ("CREATE TABLE sip2yac (cidnum CHAR (10), cidname CHAR (128))");
   }
-  if (! -e "./CallLog.csv" && $log2csv) {
-    $dbh->do ("CREATE TABLE CallLog (date CHAR (24), phonenum CHAR (10), phonename CHAR(128))");
+  if (! -e "./CallLog.csv" && (($logi2csv || $logo2csv) || ($logi2csv && $logo2csv))) {
+    $dbh->do ("CREATE TABLE CallLog (date CHAR (24), phonenum CHAR (10), phonename CHAR (128)), type CHAR (10)");
   }
   # Test if any network connections exist
 	my $pcap_test = Net::Pcap::lookupdev(\$err);
@@ -349,7 +356,7 @@ sub process_pkt {
           my @reversel_providers = qw( csv_lookup anywho_lookup addresses_lookup google_lookup
                                        yp_lookup whitepages_lookup telcod_lookup
                                       );
-          foreach $provider (@reversel_providers) {
+          foreach my $provider (@reversel_providers) {
             last if $callername ne "";
             print("\tTrying $provider...\n") if ($debug);
             $callername = &$provider($npa, $nxx, $station);
@@ -382,17 +389,19 @@ sub process_pkt {
 						}
 					}
 				}
+        &logCall($datestamp, $callernumber,'incoming',$callername) if ($logi2csv);
 			}
       $dataset = "INVITE sip: To: <sip:2125556789@>" if ($debug2);
       # Check to see if this is an OUTGOING call
       # Only process if OUTGOING call logging is enabled 
-      if ($dataset=~/To\:\s*<sip\:(.*)@/ && $1 !~ /$ignore/ && $log2csv) {
+      if ($dataset=~/To\:\s*<sip\:(.*)@/ && $1 !~ /$ignore/ && $logo2csv) {
         my $callernumber = $1;
 				$callernumber=~s/^\s+//g;
 				$callernumber=~s/\s+$//g;
 				$callernumber=~s/^1//g;
         log_msg("\nDetected outgoing call: $callernumber\n");
-        &logCall($datestamp, $callernumber);
+        # Log the Outgoing call (blank name)
+        &logCall($datestamp, $callernumber,'outgoing','');
       }
 		}
 	}
@@ -414,16 +423,18 @@ sub getOptions{
             $arg=$_;
             if($arg!~/^\#/){
                $dev=$1 if($arg=~/dev=(.*)/);
+               $whitepages_api=$1 if($arg=~/wpapi=(.*)/);
                $filter_str=$1 if($arg=~/filter='(.*)'/);
                $update_csv=1 if ($arg=~/updatecsv=1/);
-               $log2csv=1 if ($arg=~/logoutgoing=1/);
+               $logo2csv=1 if ($arg=~/logoutgoing=1/);
+               $logi2csv=1 if ($arg=~/logincoming=1/);
                $promisc=1 if ($arg=~/promisc=1/);
                $notifylist=$1 if ($arg=~/y=(.*)/);
                $to_ms=$1 if ($arg=~/timeout=(.*)/);
                $quiet=1 if ($arg=~/quiet=1/);
-               $debug=$1 if ($arg=~/debug=(.*)/);
+               $debug=1 if ($arg=~/debug=1/);
                $ignore=$1 if ($arg=~/ignore=(.*)/);
-               $useEvtlog=$1 if ($arg=~/useEvtlog=(.*)/);
+               $useEvtlog=1 if ($arg=~/useEvtlog=1/);
            }
         }
         close(CONFIG);
@@ -432,24 +443,27 @@ sub getOptions{
         foreach $arg (@ARGV){
             $dev=$1 if($arg=~/-d=(.*)/);
             $filter_str=$1 if($arg=~/-f=(.*)/);
+            $whitepages_api=$1 if($arg=~/-wp=(.*)/);
             $ignore=$1 if($arg=~/-i=(.*)/);
             $update_csv=1 if ($arg=~/-u/);
-            $log2csv=1 if ($arg=~/-o/);
+            $logo2csv=1 if ($arg=~/-logo/);
+            $logi2csv=1 if ($arg=~/-logi/);
             $promisc=1 if ($arg=~/-p/);
             $notifylist=$1 if ($arg=~/-y=(.*)/);
             $to_ms=$1 if ($arg=~/-to=(.*)/);
             $quiet=1 if ($arg=~/--quiet/);
             if($arg=~/--h/ or $arg=~/-h/){
-                print "\nTo use:\n";
+                print "\nOptions:\n";
                 print "  --install   Install as a Service\n";
                 print "  --remove    Remove the Service\n";
                 print "  -C=<file>   Config file to store settings\n";
                 print "  -d=<dev>    Specify the device from which packets are captured\n";
                 print "  -i=<num>    Specify a phone number to ignore (yours)\n";
+                print "  -wp=<API>   Specify your personal Whitepages API key\n";
                 print "  -u          Write any reverse lookup to local CSV\n";
-                print "  -o          Log outgoing calls to local CSV\n";
+                print "  -logo       Log outgoing calls to local CSV\n";
+                print "  -logi       Log incoming calls to local CSV\n";
                 print "  -f=\"filter\" String to filter on enclosed in single quotes\n";
-                print "              (DEFAULT: \"udp and port 5060\")\n";
                 print "  -y=ip:port  IP address(es) and port to send YAC messages to (comma separated)\n";
                 print "  -p          Place the device into promiscuous mode\n";
                 print "  -to=integer Read timeout in ms\n";
@@ -515,30 +529,33 @@ sub google_lookup {
 }
 
 sub whitepages_lookup {
-  # assign arguments
-	my ($npa, $nxx, $station) = @_;
-  # creste http object with timeout
-	my $ua = LWP::UserAgent->new( timeout => 45);
-  # create url with phone number
-	my $URL = qq(http://api.whitepages.com/reverse_phone/1.0/?phone=$npa$nxx$station;api_key=ebbe5c21ae226fdb7d26e1faef45b31e);
-  # set browser useragent to try and look like a real browser
-	$ua->agent($useragent);
-  # make the connection
-	my $req = new HTTP::Request GET => $URL;
-  # store the resulting content
-	my $res = $ua->request($req);
-  # process content if we actually got something
-	if ($res->is_success()) {
-    if ($res->content =~ /<wp:displayname>(.*)<\/wp:displayname>/) {
-      $clidname = $1;
-      return $clidname;
+  # check for API key
+  if ($whitepages_api ne "") {
+    # assign arguments
+    my ($npa, $nxx, $station) = @_;
+    # creste http object with timeout
+    my $ua = LWP::UserAgent->new( timeout => 45);
+    # create url with phone number
+    my $URL = qq(http://api.whitepages.com/reverse_phone/1.0/?phone=$npa$nxx$station;api_key=$whitepages_api);
+    # set browser useragent to try and look like a real browser
+    $ua->agent($useragent);
+    # make the connection
+    my $req = new HTTP::Request GET => $URL;
+    # store the resulting content
+    my $res = $ua->request($req);
+    # process content if we actually got something
+    if ($res->is_success()) {
+      if ($res->content =~ /<wp:displayname>(.*)<\/wp:displayname>/) {
+        my $clidname = $1;
+        return $clidname;
+      }
+      if ($res->content =~ /<wp:carrier>(.*)<\/wp:carrier>/) {
+        my $clidname = $1;
+        return $clidname;
+      }
     }
-    if ($res->content =~ /<wp:carrier>(.*)<\/wp:carrier>/) {
-      $clidname = $1;
-      return $clidname;
-    }
-	}
-	return "";
+    return "";
+  }
 }
 
 sub addresses_lookup {
@@ -657,7 +674,7 @@ sub csv_update {
 
 sub logCall {
   # assign arguments
-	my ($date, $phonenum) = @_;
+	my ($date, $phonenum, $type, $phonename) = @_;
   # vars for phone number split
   my ($npa, $nxx, $station) = "";
   if ($phonenum =~ /^(\d{3})(\d{3})(\d{4})$/) {
@@ -668,11 +685,11 @@ sub logCall {
   }
   
   # lookup who is being called
-  my $phonename = "";
+  #my $phonename = "";
   my @reversel_providers = qw( csv_lookup anywho_lookup addresses_lookup google_lookup
                                yp_lookup whitepages_lookup telcod_lookup
                               );
-  foreach $provider (@reversel_providers) {
+  foreach my $provider (@reversel_providers) {
     last if $phonename ne "";
     print("\tTrying $provider...\n") if ($debug);
     $phonename = &$provider($npa, $nxx, $station);
@@ -680,5 +697,5 @@ sub logCall {
   }
   
   # Log call reguardless of whether we have a name
-  $dbh->do (qq;INSERT INTO CallLog VALUES('$date','$phonenum','$phonename'););
+  $dbh->do (qq;INSERT INTO CallLog VALUES('$date','$phonenum','$phonename','$type'););
 }

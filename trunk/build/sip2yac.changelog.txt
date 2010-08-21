@@ -39,3 +39,7 @@
 # 1.13 Added more comments to source
 #      Added logic to prevent duplicate entries from being added to the CSV file
 #      Added feature to log outgoing calls to CSV
+# 1.14 Added incoming to the logging to CSV feature intoduced in 1.13 - NOTE options rewording
+#      Whitepages.com now requires an API key. Due to rate limiting, it makes more sense to require individuals to provide an API key rather than embed mine
+#      Sign-up here: http://developer.whitepages.com
+#      Updated README

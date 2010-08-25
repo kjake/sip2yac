@@ -1,51 +1,7 @@
 #!/usr/bin/perl -w
-# 1.00 Initial release for MythTV by James Armstrong
-# 1.01 Changed Caller ID Name parsing to allow for no name.
-#      by Larry Silverman
-# 1.02 Reformat phone number to be in format xxx-xxx-xxxx.
-#      Enable display of date/time in OSD.
-#      Adjust default filter to check port 10000.
-#      Reformat perl code.
-#      by Kevin Venkiteswaran
-# 1.03 First Windows implementation as a YAC Server instead
-#      Added option to ignore a phone number since Vonage is sending an invite packet for Outgoing calls as well
-#      Commented out all Unix things for now
-#      Use WinPcap to enable sniffing
-# 1.04 Implemented use of Windows Syslog (Event Viewer)
-#      Since Windows has no POSIX interface, it is not possible to fork() (correctly), removed Daemon option
-#      Cleaned up print outs
-#      by Kevin Jacobson (for v1.03+)
-# 1.05 Defined dependant Windows Services hooks
-#      Started building exe with Windows Service support
-#      Cleaned up Help output
-#      Further cleanup of Logging
-# 1.06 Changed default sniff port to 5060 to be compliant with more SIP services
-#      Changed to only write to the Windows Event log when running as a service
-#      Further cleanup of the Help text
-#      Set Pcap to only compile the filter if a filter has been set, else just loop through all traffic
-#      Changed Help text to use double-quotes to set the Pcap filter, else we set a unterminated string value that causes the script to throw-up
-# 1.07 Setup a "fake" fork() to allow the service to start as a parent, spawn child, and poll child and no longer be in a loop so as to catch the STOP from Windows Service control
-# 1.08 Should see an 11 digit phone number incoming from the SIP provider and reformat to a 10 digit formatted number
-#      Set listener timeout to 5 seconds so the program doesn't wait forever if a listener is off
-#      Strip any single or double quotes from the filter string to keep the argument reader from getting confused
-# 1.09 Added additional error checking
-#      Fixed YAC listener message sending and added sucess/fail debug messages
-# 1.10 Added reverse lookup for VoIP systems that do not receive CNAM/CIDNAME
-#      Reverse Lookup Code from: http://www.teamforrest.com/blog/89/using-agi-to-get-caller-id-name-cnam/
-#      Thanks to 'traker1001' on the SageTV forums for the help!
-# 1.11 Lookup missing CNAM/CIDNAME info from CSV file before going to the internet
-#      Format: 2125556789,Capt. Crunch
-# 1.12 Add additional reverse lookup sources
-#      Rename project to sip2yac
-# 1.13 Added more comments to source
-#      Added logic to prevent duplicate entries from being added to the CSV file
-#      Added feature to log outgoing calls to CSV
-# 1.14 Added incoming to the logging to CSV feature intoduced in 1.13 - NOTE options rewording
-#      Whitepages.com now requires an API key. Due to rate limiting, it makes more sense to require individuals to provide an API key rather than embed mine
-#      Sign-up here: http://developer.whitepages.com
-#      Updated README
 
 use strict;
+no strict "refs";
 use warnings;
 use IO::Socket;
 use IO::Socket::INET;

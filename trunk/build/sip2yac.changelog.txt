@@ -43,3 +43,5 @@
 #      Whitepages.com now requires an API key. Due to rate limiting, it makes more sense to require individuals to provide an API key rather than embed mine
 #      Sign-up here: http://developer.whitepages.com
 #      Updated README
+#      More strictly assigning variables, etc.
+# 1.15 Loosen strict failures on references.

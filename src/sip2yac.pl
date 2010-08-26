@@ -24,7 +24,7 @@ autoflush STDOUT 1;
 ######################################################################
 #########   User Defined Variables                           #########
 ######################################################################
-my ($pid, $child, $all_devs, $notifylist, $debugmsg, @hosts_to_notify);
+my ($pid, $child, $all_devs, $debugmsg, @hosts_to_notify);
 my $debug=0;
 my $debug2=0;
 my $quiet=0;
@@ -38,6 +38,7 @@ my $logo2csv=0;
 my $logi2csv=0;
 my $update_csv=0;
 my $ignore="";
+my $notifylist="";
 my $whitepages_api="";
 my $ident="sip2yac";
 my $facility="local1";
@@ -66,6 +67,7 @@ $dbh->{csv_tables}{CallLog} = {
         escape_char => undef,
         col_names => [qw( date phonenum phonename type )],
         };
+        
 $PerlSvc::Config{ServiceName} = "sip2yac";
 $PerlSvc::Config{DisplayName} = "sip2yac";
 $PerlSvc::Config{StartType} = "auto";
@@ -210,10 +212,12 @@ sub start_AS {
 	log_msg("YAC listeners: $notifylist") if (defined($notifylist) && !($quiet));
   # Create CSV file if it doesn't exist
   if (! -e "./sip2yac.csv") {
+    print ("Creating sip2yac CSV...") if ($debug);
     $dbh->do ("CREATE TABLE sip2yac (cidnum CHAR (10), cidname CHAR (128))");
   }
-  if (! -e "./CallLog.csv" && (($logi2csv || $logo2csv) || ($logi2csv && $logo2csv))) {
-    $dbh->do ("CREATE TABLE CallLog (date CHAR (24), phonenum CHAR (10), phonename CHAR (128)), type CHAR (10)");
+  if (! -e "./CallLog.csv") {
+    print ("Creating CallLog CSV...") if ($debug);
+    $dbh->do ("CREATE TABLE CallLog (date CHAR (24), phonenum CHAR (10), phonename CHAR (128), type CHAR (10))");
   }
   # Test if any network connections exist
 	my $pcap_test = Net::Pcap::lookupdev(\$err);
@@ -345,7 +349,7 @@ sub process_pkt {
 						}
 					}
 				}
-        &logCall($datestamp, $callernumber,'incoming',$callername) if ($logi2csv);
+        &logCall($datestamp, $npa.$nxx.$station,'incoming',$callername) if ($logi2csv);
 			}
       $dataset = "INVITE sip: To: <sip:2125556789@>" if ($debug2);
       # Check to see if this is an OUTGOING call

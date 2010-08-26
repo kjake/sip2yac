@@ -45,3 +45,4 @@
 #      Updated README
 #      More strictly assigning variables, etc.
 # 1.15 Loosen strict failures on references.
+# 1.16 Fix major bug in call logging
